@@ -1,5 +1,5 @@
 import PostalMime, { Address, Email } from 'postal-mime';
-import { Webhook, MessageBuilder } from 'discord-ts-webhook';
+import { Embed, Webhook } from '@vermaysha/discord-webhook';
 import Env = Cloudflare.Env;
 
 export default {
@@ -7,7 +7,7 @@ export default {
     const mail = await PostalMime.parse(message.raw);
     await Promise.allSettled([
       sendWebhook(mail, env),
-      forwardMessage(message, env),
+      forwardMessage(message, env)
     ]);
   }
 } satisfies ExportedHandler<Env>;
@@ -16,18 +16,22 @@ async function sendWebhook(mail: Email, env: Env) {
   // @ts-ignore
   const maybeASpam = !env.KNOWN_EMAILS.includes(message.to);
 
-  const hook = new Webhook({
-    url: env.DISCORD_WEBHOOK,
-    throwErrors: true,
-    retryOnLimit: true
-  });
+  const webhook = new Webhook(env.DISCORD_WEBHOOK);
 
   const subject = mail.subject !== undefined ? mail.subject : '(No subject)';
-  const embed = new MessageBuilder()
+  const embed = new Embed()
     .setTitle('New email received!')
     .setTimestamp()
-    .addField('From', generateDisplayName(mail), false)
-    .addField('Subject', subject, false);
+    .addField({
+      name: "From",
+      value: generateDisplayName(mail),
+      inline: false,
+    })
+    .addField({
+      name: "Subject",
+      value: subject,
+      inline: false,
+    });
 
   if (maybeASpam) {
     embed
@@ -35,8 +39,9 @@ async function sendWebhook(mail: Email, env: Env) {
       .setColor('#f8b500');
   }
 
-  await hook
-    .send(embed)
+  await webhook
+    .addEmbed(embed)
+    .send()
     .catch((err) => console.error(err.message));
 }
 
