@@ -6,13 +6,13 @@ export default {
   async email(message, env, ctx) {
     const mail = await PostalMime.parse(message.raw);
     await Promise.allSettled([
-      sendWebhook(mail, env),
+      sendWebhook(message, mail, env),
       forwardMessage(message, env)
     ]);
   }
 } satisfies ExportedHandler<Env>;
 
-async function sendWebhook(mail: Email, env: Env) {
+async function sendWebhook(message: ForwardableEmailMessage, mail: Email, env: Env) {
   // @ts-ignore
   const maybeASpam = !env.KNOWN_EMAILS.includes(message.to);
 
