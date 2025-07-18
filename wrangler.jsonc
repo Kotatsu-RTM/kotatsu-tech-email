@@ -7,9 +7,13 @@
     "name": "kotatsu-tech-email",
     "main": "src/index.ts",
     "compatibility_date": "2025-07-18",
+    "compatibility_flags": [
+        "nodejs_compat"
+    ],
+    "keep_vars": true,
     "observability": {
         "enabled": true
-    }
+    },
     /**
      * Smart Placement
      * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -27,7 +31,10 @@
      * Environment Variables
      * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
      */
-    // "vars": { "MY_VARIABLE": "production_value" },
+     "vars": {
+         "KNOWN_EMAILS": ["JUST_FOR_TYPE_GENERATION"],
+         "EMAILS_FORWARD_TO": ["JUST_FOR_TYPE_GENERATION"]
+     }
     /**
      * Note: Use secrets to store sensitive data.
      * https://developers.cloudflare.com/workers/configuration/secrets/

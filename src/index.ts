@@ -1,18 +1,70 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import PostalMime, { Address, Email } from 'postal-mime';
+import { Webhook, MessageBuilder } from 'discord-ts-webhook';
+import Env = Cloudflare.Env;
 
 export default {
-  async fetch(request, env, ctx): Promise<Response> {
-    return new Response('Hello World!');
+  async email(message, env, ctx) {
+    const mail = await PostalMime.parse(message.raw);
+    await Promise.allSettled([
+      sendWebhook(mail, env),
+      forwardMessage(message, env),
+    ]);
   }
 } satisfies ExportedHandler<Env>;
+
+async function sendWebhook(mail: Email, env: Env) {
+  // @ts-ignore
+  const maybeASpam = !env.KNOWN_EMAILS.includes(message.to);
+
+  const hook = new Webhook({
+    url: env.DISCORD_WEBHOOK,
+    throwErrors: true,
+    retryOnLimit: true
+  });
+
+  const subject = mail.subject !== undefined ? mail.subject : '(No subject)';
+  const embed = new MessageBuilder()
+    .setTitle('New email received!')
+    .setTimestamp()
+    .addField('From', generateDisplayName(mail), false)
+    .addField('Subject', subject, false);
+
+  if (maybeASpam) {
+    embed
+      .setDescription('⚠️ __**May contain spam contents!**__')
+      .setColor('#f8b500');
+  }
+
+  await hook
+    .send(embed)
+    .catch((err) => console.error(err.message));
+}
+
+function generateDisplayName(mail: Email): string {
+  function formatAddress(address: Address): string {
+    if (address.name.length > 0) {
+      return `${address!!.name} <${address.address!!}>`;
+    } else {
+      return address.address!!;
+    }
+  }
+
+  if (mail.from.group !== undefined) {
+    const groupName = mail.from.name.length > 0 ? mail.from.name : '==No Group Name Provided==';
+    return `${groupName} (Sender: ${formatAddress(mail.sender!!)})`;
+  } else {
+    return formatAddress(mail.from);
+  }
+}
+
+async function forwardMessage(message: ForwardableEmailMessage, env: Env) {
+  await Promise.allSettled(
+    env
+      .EMAILS_FORWARD_TO
+      .map(async (address) => {
+        await message
+          .forward(address)
+          .catch((reason) => console.error(reason.message));
+      })
+  );
+}

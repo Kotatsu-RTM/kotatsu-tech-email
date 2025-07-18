@@ -40,7 +40,10 @@
         "skipLibCheck": true,
         "types": [
             "./worker-configuration.d.ts"
-        ]
+        ],
+
+        /* Avoid TS7016 */
+        "resolvePackageJsonExports": false
     },
     "exclude": [
         "test"
