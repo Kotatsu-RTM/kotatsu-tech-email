@@ -51,7 +51,7 @@ async function sendWebhook(message: ForwardableEmailMessage, mail: Email, env: E
 function generateDisplayName(mail: Email): string {
   function formatAddress(address: Address): string {
     if (address.name.length > 0) {
-      return `${address!!.name} \<${address.address!!}\>`;
+      return `${address!!.name} \\<${address.address!!}\\>`;
     } else {
       return address.address!!;
     }
