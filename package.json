@@ -17,6 +17,7 @@
     },
     "dependencies": {
         "@vermaysha/discord-webhook": "^1.4.0",
-        "postal-mime": "^2.4.4"
+        "postal-mime": "^2.4.4",
+        "tslib": "^2.8.1"
     }
 }
