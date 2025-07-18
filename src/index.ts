@@ -21,6 +21,9 @@ async function sendWebhook(mail: Email, env: Env) {
   const subject = mail.subject !== undefined ? mail.subject : '(No subject)';
   const embed = new Embed()
     .setTitle('New email received!')
+    .setFooter({
+      text: "Kotatsu-RTM/kotatsu-tech-email",
+    })
     .setTimestamp()
     .addField({
       name: "From",
